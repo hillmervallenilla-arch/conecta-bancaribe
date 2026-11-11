@@ -1,0 +1,1 @@
+import WeeklyBoard from "@/components/WeeklyBoard"; export const dynamic="force-dynamic"; export default function Page(){return <WeeklyBoard/>}

@@ -1,0 +1,1 @@
+import {dashboardData} from "@/lib/metrics";import {currentUser} from "@/lib/auth";import ManagementDashboard from "@/components/ManagementDashboard";export const dynamic="force-dynamic";export default async function Page(){const u=await currentUser();return <ManagementDashboard d={dashboardData(u?.name)} personal={u?.name}/>}

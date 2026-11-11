@@ -1,0 +1,1 @@
+V4.11.1 candidata: correcciones LoginDemo use client, cierre Sidebar y separación de autenticación del componente cliente. app/layout obtiene menú y nombre de rol en servidor. No se incluye base de datos ni secretos. Validar npm install, npm run build y pruebas funcionales antes de declarar estable.

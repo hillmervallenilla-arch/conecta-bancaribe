@@ -1,0 +1,2 @@
+import db from "@/lib/db";import {NextResponse} from "next/server";
+export async function POST(req:Request){const b=await req.json();const u=db.prepare("SELECT id,name,email,area,role FROM users WHERE id=? AND active=1").get(Number(b.user_id)) as any;if(!u)return NextResponse.json({error:"Usuario no disponible"},{status:404});const r=NextResponse.json(u);r.cookies.set("brm_user",String(u.id),{httpOnly:true,sameSite:"lax",path:"/",maxAge:60*60*8});return r}

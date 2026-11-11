@@ -1,0 +1,5 @@
+import Link from "next/link"; import {templates} from "@/lib/framework";
+export default function PhaseCard({p}:{p:any}){return <div className={`card phase${p.id} overflow-hidden`}>
+<div className="p-4" style={{background:"var(--soft)"}}><div className="flex items-center gap-3"><span className="w-11 h-11 rounded-full text-white grid place-items-center text-xl font-black" style={{background:"var(--p)"}}>{p.id}</span><div><h2 className="font-black text-lg" style={{color:"var(--p)"}}>{p.name}</h2><b className="text-sm">{p.subtitle}</b></div></div></div>
+<div className="p-4"><p className="text-sm font-semibold min-h-10">{p.verbs}</p><div className="mt-3 text-sm"><b>Plantillas</b>{templates.filter(t=>t.phase===p.id).map(t=><div key={t.id} className="py-1"><span className="badge mr-2">{String(t.id).padStart(2,"0")}</span>{t.name}</div>)}</div>
+<Link href={`/fase/${p.id}`} className="block text-center text-white font-bold rounded-lg p-2.5 mt-4" style={{background:"var(--p)"}}>Ir a {p.name} →</Link></div></div>}

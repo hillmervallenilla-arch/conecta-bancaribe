@@ -1,0 +1,20 @@
+services:
+  conecta:
+    build: .
+    image: conecta-bancaribe:4.11.3-poc
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      APP_ENV: DEMO
+      AUTH_MODE: DEMO
+    volumes:
+      - conecta_demo_data:/app/data
+    security_opt:
+      - no-new-privileges:true
+    init: true
+volumes:
+  conecta_demo_data:

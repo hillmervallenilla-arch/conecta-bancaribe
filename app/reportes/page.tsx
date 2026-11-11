@@ -1,0 +1,1 @@
+import ReportsCenter from "@/components/ReportsCenter";import {reportsData} from "@/lib/reports";export const dynamic="force-dynamic";export default function Page(){return <ReportsCenter reports={reportsData()}/>}

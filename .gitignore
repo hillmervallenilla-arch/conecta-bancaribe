@@ -1,0 +1,23 @@
+# Dependencies / builds
+node_modules/
+.next/
+*.tsbuildinfo
+coverage/
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.docker.example
+*.pem
+*.pfx
+*.key
+*.p12
+# Databases, runtime and uploads
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+/data/
+/uploads/
+*.log
+.DS_Store

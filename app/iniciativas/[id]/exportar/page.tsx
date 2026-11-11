@@ -1,0 +1,32 @@
+import db from "@/lib/db";
+import {currentUser,hasPermission} from "@/lib/auth";
+import {notFound,redirect} from "next/navigation";
+import PrintExpedienteButton from "@/components/PrintExpedienteButton";
+import {APP_VERSION} from "@/lib/version";
+export const dynamic="force-dynamic";
+function safeParse(raw:string){try{return JSON.parse(raw||"{}")}catch{return {}}}
+function val(v:unknown){if(v===null||v===undefined||v==="")return "Pendiente";if(typeof v==="object")return JSON.stringify(v);return String(v)}
+const phaseNames=["","RELATE","SHAPE","DECIDE & ENABLE","DELIVER & REALIZE"];
+export default async function ExportarExpediente({params}:{params:Promise<{id:string}>}){
+ const u=await currentUser();if(!u)redirect("/login");
+ if(!hasPermission(u,"INITIATIVES_VIEW"))return <div className="p-8" role="alert">No tienes autorización para exportar expedientes.</div>;
+ const {id}=await params;const iid=Number(id);if(!Number.isSafeInteger(iid)||iid<1)notFound();
+ const i=db.prepare("SELECT * FROM initiatives WHERE id=?").get(iid) as any;if(!i)notFound();
+ const need=db.prepare("SELECT * FROM needs WHERE initiative_id=? ORDER BY id DESC LIMIT 1").get(iid) as any;
+ const templates=db.prepare("SELECT * FROM template_records WHERE initiative_id=? ORDER BY template_id").all(iid) as any[];
+ const events=db.prepare("SELECT * FROM initiative_activity WHERE initiative_id=? ORDER BY id").all(iid) as any[];
+ const weekly=db.prepare("SELECT wi.*,wb.status board_status FROM weekly_board_items wi JOIN weekly_boards wb ON wb.id=wi.board_id WHERE wi.initiative_id=? ORDER BY wi.id DESC").all(iid) as any[];
+ const allocations=db.prepare("SELECT * FROM initiative_capacity_allocations WHERE initiative_id=? ORDER BY area,period").all(iid) as any[];
+ const attachments=need?db.prepare("SELECT file_name,file_type,created_at FROM need_attachments WHERE need_id=? ORDER BY id").all(need.id) as any[]:[];
+ const identity=need?.master_id||`INI-${String(i.id).padStart(5,"0")}`;
+ const date=new Date().toLocaleString("es-VE",{dateStyle:"long",timeStyle:"short"});
+ return <article className="pdf-document pdf-page mx-auto max-w-5xl p-8"><div className="pdf-no-print mb-5 flex items-center justify-between gap-4 rounded-xl bg-[#eaf5fa] p-4"><div><b>Vista de exportación</b><p className="text-sm">Selecciona «Guardar como PDF» como destino en el cuadro de impresión. No se modificará el expediente.</p></div><PrintExpedienteButton/></div>
+ <header className="mb-6 border-b-4 border-[#00a6b2] pb-4"><div className="flex items-center justify-between"><b className="text-xl text-[#003f6b]">BANCARIBE</b><span className="text-xs">Conecta Bancaribe · {APP_VERSION}</span></div><h1 className="mt-5 font-black text-[#003f6b]">Expediente de iniciativa</h1><p className="text-lg font-bold">{i.title}</p><p>Identificador: <b>{identity}</b> · Corte: {date}</p><p className="text-xs text-slate-500">Documento de consulta generado con los datos disponibles al momento de la exportación.</p></header>
+ <section className="pdf-section mb-6"><h2 className="font-black text-[#003f6b]">1. Identificación y estado</h2><table><tbody>{[["Identificador",identity],["Iniciativa",i.title],["Área",i.area],["Responsable",i.owner],["Fase",phaseNames[i.phase]||i.phase],["Estado",i.status],["Fecha de registro",i.created_at],["Valor esperado",i.value_statement]].map(([k,v])=><tr key={k}><th className="w-52">{k}</th><td>{val(v)}</td></tr>)}</tbody></table></section>
+ <section className="pdf-section mb-6"><h2 className="font-black text-[#003f6b]">2. Necesidad de origen</h2>{need?<table><tbody>{[["Registro maestro",need.master_id],["Solicitante",need.requester],["Área solicitante",need.requester_area],["Situación actual",need.current_situation],["Personas o procesos afectados",need.affected_people_process],["Frecuencia",need.frequency],["Resultado esperado",need.expected_result],["Indicador de éxito",need.success_indicator],["Fecha límite y motivo",need.deadline_reason],["Riesgo de no actuar",need.inaction_risk],["Solución propuesta",need.proposed_solution]].map(([k,v])=><tr key={k}><th>{k}</th><td>{val(v)}</td></tr>)}</tbody></table>:<p>Ingreso directo a ejecución: no existe registro maestro de necesidad vinculado.</p>}</section>
+ <section className="pdf-section mb-6"><h2 className="font-black text-[#003f6b]">3. Capacidad comprometida</h2>{allocations.length?<table><thead><tr><th>Área</th><th>Período</th><th>FTE</th><th>Inicio</th><th>Liberación prevista</th><th>Estado</th></tr></thead><tbody>{allocations.map(a=><tr key={a.id}><td>{val(a.area)}</td><td>{val(a.period)}</td><td>{val(a.capacity_amount)}</td><td>{val(a.start_date)}</td><td>{val(a.planned_release_date)}</td><td>{val(a.status)}</td></tr>)}</tbody></table>:<p>Sin asignaciones de capacidad registradas.</p>}</section>
+ <section className="mb-6"><h2 className="font-black text-[#003f6b]">4. Plantillas del expediente</h2>{templates.length?templates.map(t=><div className="pdf-section mb-4" key={t.id}><h3 className="font-bold">Plantilla {String(t.template_id).padStart(2,"0")} · {val(t.status)}</h3><p className="text-xs">Última actualización: {val(t.updated_at)}</p><table><tbody>{Object.entries(safeParse(t.data)).filter(([k])=>!k.startsWith("_")).map(([k,v])=><tr key={k}><th className="w-52">{k.replaceAll("_"," ")}</th><td>{val(v)}</td></tr>)}</tbody></table></div>):<p>No hay plantillas registradas.</p>}</section>
+ <section className="pdf-section mb-6"><h2 className="font-black text-[#003f6b]">5. Documentos anexos</h2>{attachments.length?<ul className="list-disc pl-5">{attachments.map((a,n)=><li key={n}>{a.file_name} · {val(a.created_at)}</li>)}</ul>:<p>Sin documentos anexos registrados. Los archivos originales no se incorporan a este PDF.</p>}</section>
+ <section className="mb-6"><h2 className="font-black text-[#003f6b]">6. Seguimiento y trazabilidad</h2>{weekly.length?weekly.map(w=><div className="pdf-section border-b py-2" key={w.id}><b>{w.title}</b> · {val(w.status)}<p>{val(w.situation)}</p><p>Próxima acción: {val(w.next_action)}</p></div>):<p>Sin seguimientos semanales vinculados.</p>}{events.length?<table><thead><tr><th>Fecha</th><th>Evento</th><th>Detalle</th></tr></thead><tbody>{events.map(e=><tr key={e.id}><td>{val(e.created_at)}</td><td>{val(e.title)}</td><td>{val(e.detail)}</td></tr>)}</tbody></table>:<p>Sin eventos en el historial.</p>}</section>
+ <footer className="mt-8 border-t pt-3 text-xs text-slate-500">Bancaribe · Expediente {identity} · Generado el {date}. Documento de consulta; no sustituye las aprobaciones o evidencias originales.</footer></article>
+}

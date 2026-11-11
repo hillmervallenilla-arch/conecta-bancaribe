@@ -1,0 +1,2 @@
+import db from "@/lib/db";import {NextResponse} from "next/server";
+export async function PUT(req:Request,{params}:{params:Promise<{initiativeId:string,templateId:string}>}){const p=await params;const b=await req.json();db.prepare(`INSERT INTO template_records(initiative_id,template_id,data,status,updated_at) VALUES(?,?,?,'En progreso',CURRENT_TIMESTAMP) ON CONFLICT(initiative_id,template_id) DO UPDATE SET data=excluded.data,status='En progreso',updated_at=CURRENT_TIMESTAMP`).run(p.initiativeId,p.templateId,JSON.stringify(b.data||{}));return NextResponse.json({ok:true});}

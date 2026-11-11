@@ -1,0 +1,2 @@
+import {redirect} from "next/navigation";import {currentUser,hasPermission} from "@/lib/auth";import {executiveDashboardData} from "@/lib/executive";import ExecutiveDashboard from "@/components/ExecutiveDashboard";
+export const dynamic="force-dynamic";export default async function Page(){const u=await currentUser();if(!u)redirect("/login");if(!hasPermission(u,"EXECUTIVE_DASHBOARD_VIEW"))redirect("/");return <ExecutiveDashboard d={executiveDashboardData()}/>}

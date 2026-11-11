@@ -1,0 +1,28 @@
+CONecta Bancaribe — V4.11.3 Demo
+Cambio de marca interna
+
+Objetivo
+Sustituir el nombre visible "Portal de AutoServicio Bancaribe" por "Conecta Bancaribe", manteniendo intacta la línea base funcional V4.11.3.
+
+Alcance aplicado
+- Pantalla de inicio de sesión.
+- Título/metadatos de la aplicación.
+- Página de inicio.
+- Pie del menú lateral.
+- Centro de Reportes.
+- Bitácora Semanal.
+- Exportación del expediente.
+- Nombre remitente y textos de notificación/correo.
+- Script de prueba SMTP.
+- Referencias documentales incluidas en el paquete.
+- Descripción de pruebas automatizadas.
+
+No se modificó
+- Modelo funcional BRM.
+- Roles o permisos.
+- Flujo de necesidades/iniciativas.
+- Esquema de datos.
+- Versión de aplicación: V4.11.3.
+
+Nota de validación
+Se verificó por búsqueda estática que no quedan referencias visibles al nombre anterior en el código fuente del paquete. En este entorno no fue posible ejecutar la suite npm/build porque el ZIP fuente no contiene node_modules ni package-lock y la instalación de dependencias excedió el tiempo disponible. Ejecutar npm install, npm test y npm run build en el ambiente de desarrollo antes de promover la versión.
